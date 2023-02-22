@@ -125,9 +125,10 @@ class DataHandler:
                     self.object_feature_dict = self._read_feature_file(feature_type='object')
 
         if cfg.dataset == 'msrvtt':
-            self.train_dict, self.val_dict,self.test_dict = self._msrvtt_create_dict() # Reference caption dictionaries
+            self.train_dict, self.val_dict, self.test_dict = self._msrvtt_create_dict() # Reference caption dictionaries
             # read appearance feature file
             self.appearance_feature_dict = self._read_feature_file(feature_type='appearance')
+            
             # read motion feature file
             if cfg.model_name == 'marn':
                 if cfg.opt_motion_feature:
@@ -153,7 +154,7 @@ class DataHandler:
             
         if self.cfg.model_name == 'sa-lstm' or self.cfg.model_name == 'recnet':
             for key in f1.keys():
-                arr = f1[key].value
+                arr = f1[key][:]
                 if arr.shape[0] < self.cfg.frame_len:
                     pad = self.cfg.frame_len - arr.shape[0]
                     arr = np.concatenate((arr,np.zeros((pad,arr.shape[1]))),axis = 0)
@@ -194,26 +195,59 @@ class DataHandler:
     def _msrvtt_create_dict(self):
         train_val_file = json.load(open(self.path.train_val_annotation_file))
         test_file = json.load(open(self.path.test_annotation_file))
+
         train_dict = {}
         val_dict = {}
         test_dict = {}
+        
+        # VANILLA CODE
+        # for datap in train_val_file['sentences']:
+        #     if int(datap['video_id'][5:]) in self.path.train_id_list:
+        #         if datap['video_id'] in list(train_dict.keys()):
+        #             train_dict[datap['video_id']] += [datap['caption']]
+        #         else:
+        #             train_dict[datap['video_id']] = [datap['caption']]
+
+        #     if int(datap['video_id'][5:]) in self.path.val_id_list:
+        #         if datap['video_id'] in list(val_dict.keys()):
+        #             val_dict[datap['video_id']] += [datap['caption']]
+        #         else:
+        #             val_dict[datap['video_id']] = [datap['caption']]
+            
+        # for datap in test_file['sentences']:
+        #     if datap['video_id'] in list(test_dict.keys()):
+        #         test_dict[datap['video_id']] += [datap['caption']]
+        #     else:
+        #         test_dict[datap['video_id']] = [datap['caption']]
+
+        # MODIFIED CODE
+        train_id_list = [i for i in range(0, 80)]
+        val_id_list = [i for i in range(80, 90)]
+        test_id_list = [i for i in range(90, 100)]
+
+        train_dict = {}
+        val_dict = {}
+        test_dict = {}
+
         for datap in train_val_file['sentences']:
-            if int(datap['video_id'][5:]) in self.path.train_id_list:
+            if int(datap['video_id'][5:]) in train_id_list:
                 if datap['video_id'] in list(train_dict.keys()):
                     train_dict[datap['video_id']] += [datap['caption']]
                 else:
                     train_dict[datap['video_id']] = [datap['caption']]
-            if int(datap['video_id'][5:]) in self.path.val_id_list:
+            
+            if int(datap['video_id'][5:]) in val_id_list:
                 if datap['video_id'] in list(val_dict.keys()):
                     val_dict[datap['video_id']] += [datap['caption']]
                 else:
                     val_dict[datap['video_id']] = [datap['caption']]
-            
-        for datap in test_file['sentences']:
-            if datap['video_id'] in list(test_dict.keys()):
-                test_dict[datap['video_id']] += [datap['caption']]
-            else:
-                test_dict[datap['video_id']] = [datap['caption']]
+                    
+            if int(datap['video_id'][5:]) in test_id_list:
+                if datap['video_id'] in list(test_dict.keys()):
+                    test_dict[datap['video_id']] += [datap['caption']]
+                else:
+                    test_dict[datap['video_id']] = [datap['caption']]
+
         return train_dict,val_dict,test_dict
     
     def getDatasets(self):
@@ -228,7 +262,9 @@ class DataHandler:
             
         if self.cfg.model_name == 'mean_pooling' or self.cfg.model_name == 'sa-lstm' or self.cfg.model_name == 'recnet':
             train_dset = CustomDataset(self.cfg,self.appearance_feature_dict, self.train_dict, self.train_name_list, self.voc)
+            
             val_dset = CustomDataset(self.cfg,self.appearance_feature_dict, self.val_dict, self.val_name_list, self.voc)
+            
             test_dset = CustomDataset(self.cfg,self.appearance_feature_dict, self.test_dict, self.test_name_list, self.voc)
             
             

@@ -7,7 +7,6 @@ Author:  Nasibullah (nasibullah104@gmail.com)
 import pickle
 import os
 
-
 class Vocabulary:
     
     def __init__(self, cfg):
@@ -17,7 +16,7 @@ class Vocabulary:
         self.word2index = {"PAD":cfg.PAD_token,"EOS":cfg.EOS_token,"SOS":cfg.SOS_token, "UNK":cfg.UNK_token}
         self.word2count = {}
         self.index2word = {cfg.PAD_token:"PAD",cfg.EOS_token:"EOS",cfg.SOS_token:"SOS", cfg.UNK_token:"UNK"}
-        self.num_words = 4
+        self.num_words = 2
         
     def addSentence(self,sentence): #Add Sentence to vocabulary
         for word in sentence.split(' '):

@@ -183,8 +183,7 @@ class SALSTM(nn.Module):
             if 'weight' in name:
                 nn.init.orthogonal_(param)
                 #nn.init.kaiming_normal_(param, mode='fan_out', nonlinearity='relu')
-
-        
+   
         
     def update_hyperparameters(self,cfg):
         
@@ -223,16 +222,19 @@ class SALSTM(nn.Module):
         start_iteration = 1
         print_loss = 0
         iteration = 1
+
         if self.cfg.opt_encoder:
             self.encoder.train()
         self.decoder.train()
+
         for data in dataloader:
             features, targets, mask, max_length, _,_,_ = data
             use_teacher_forcing = True if random.random() < self.teacher_forcing_ratio else False
-            loss = self.train_iter(utils,features,targets,mask,max_length,use_teacher_forcing)
+            loss = self.train_iter(utils, features, targets, mask, max_length, use_teacher_forcing)
             print_loss += loss
             total_loss += loss
-        # Print progress
+
+            # Print progress
             if iteration % self.print_every == 0:
                 print_loss_avg = print_loss / self.print_every
                 print("Iteration: {}; Percent complete: {:.1f}%; Average loss: {:.4f}".
@@ -261,6 +263,7 @@ class SALSTM(nn.Module):
         '''
         if self.cfg.opt_encoder:
             self.enc_optimizer.zero_grad()
+        
         self.dec_optimizer.zero_grad()
         
         loss = 0
@@ -271,6 +274,7 @@ class SALSTM(nn.Module):
         
         if self.cfg.opt_encoder:
             input_variable = self.encoder(input_variable)  
+        
         target_variable = target_variable.to(self.device)
         mask = mask.byte().to(self.device)
         
@@ -279,17 +283,17 @@ class SALSTM(nn.Module):
         decoder_input = decoder_input.to(self.device)
         decoder_hidden = torch.zeros(self.cfg.n_layers, self.cfg.batch_size,
                                       self.cfg.decoder_hidden_size).to(self.device)
+        
         if self.cfg.decoder_type == 'lstm':
             decoder_hidden = (decoder_hidden,decoder_hidden)
             
-        
         # Forward batch of sequences through decoder one time step at a time
         if use_teacher_forcing:
             for t in range(max_target_len):
                 decoder_output, decoder_hidden,_ = self.decoder(decoder_input, decoder_hidden,input_variable.float())
                 # Teacher forcing: next input comes from ground truth(data distribution)
                 decoder_input = target_variable[t].view(1, -1)
-                mask_loss, nTotal = utils.maskNLLLoss(decoder_output.unsqueeze(0), target_variable[t], mask[t],self.device)
+                mask_loss, nTotal = utils.maskNLLLoss(decoder_output.unsqueeze(0), target_variable[t], mask[t], self.device)
                 loss += mask_loss
                 print_losses.append(mask_loss.item() * nTotal)
                 n_totals += nTotal
@@ -315,7 +319,6 @@ class SALSTM(nn.Module):
         
         _ = nn.utils.clip_grad_norm_(self.decoder.parameters(), self.clip)
         self.dec_optimizer.step()
-        
         
         return sum(print_losses) / n_totals
     

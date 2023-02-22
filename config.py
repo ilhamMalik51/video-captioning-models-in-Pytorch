@@ -68,7 +68,7 @@ class Path:
     Currently supports MSVD and MSRVTT
     VATEX will be added in future
     '''
-    def __init__(self,cfg,working_path):
+    def __init__(self, cfg, working_path):
 
         if cfg.dataset == 'msvd':   
             self.local_path = os.path.join(working_path,'MSVD')     
@@ -116,9 +116,6 @@ class Path:
                 
             if cfg.appearance_feature_extractor == 'resnet101':
                 self.appearance_feature_file = os.path.join(self.feature_path,'MSRVTT_APPEARANCE_RESNET101_28.hdf5')
-                
-                
-                
 
             self.val_id_list = list(range(6513,7010))
             self.train_id_list = list(range(0,6513))
@@ -211,8 +208,8 @@ class ConfigSALSTM:
         
         
         #Encoder configuration
-        self.appearance_feature_extractor = 'resnet101'  
-        self.appearance_input_size = 2048
+        self.appearance_feature_extractor = 'inceptionresnetv2'  
+        self.appearance_input_size = 1536
         self.appearance_projected_size = 512
         self.frame_len = 28
         self.opt_encoder = opt_encoder
